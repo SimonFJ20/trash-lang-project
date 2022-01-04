@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+      "target": "ES2021",
+      "module": "CommonJS",
+      "composite": true,
+      "incremental": true,
+      // "extendedDiagnostics": true,
+      "inlineSources": true,
+      "inlineSourceMap": true,
+      "lib": ["ES2021"],
+      "moduleResolution": "Node",
+      "outDir": "./dist",
+      "pretty": true,
+      "rootDir": "./src",
+      // "baseUrl": "./src",
+      "skipDefaultLibCheck": true,
+      "skipLibCheck": true,
+      "strict": true,
+      "tsBuildInfoFile": ".tsbuildinfo",
+      "esModuleInterop": true,
+    },
+    "include": ["./src/**/*.ts"]
+}
