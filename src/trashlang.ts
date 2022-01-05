@@ -2,15 +2,18 @@
 export namespace TL {
     export type File = Statements;
 
-    export type Block = Statements;
+    export type Block = {
+        type: 'block',
+        body: Statements,
+    };
 
     export type Statements = Statement[];
 
     export type Statement = 
-        Block | FuncDef | IfElse | If | While | Expression;
+        Block | FuncDef | IfElse | If | While | VarDef | Expression;
 
     export type FuncDef = {
-        type: 'func',
+        type: 'funcdef',
         name: Token,
         args: Token[],
         body: Statement,

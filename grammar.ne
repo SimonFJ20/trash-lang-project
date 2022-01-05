@@ -48,7 +48,7 @@ const lexer = compile({
 
 file        -> statements {% id %}
 
-block       ->  "{" _ statements _ "}"   {% (v) => v[2] %}
+block       ->  "{" _ statements _ "}"   {% (v) => ({type: 'block', body: v[2]}) %}
 
 statements   ->  (_ statement (sl_ %nl _ statement):*):? _
     {% (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
@@ -58,9 +58,10 @@ statement   ->  block       {% id %}
             |   ifelse      {% id %}
             |   if          {% id %}
             |   while       {% id %}
+            |   vardef      {% id %}
             |   expression  {% id %}
 
-funcdef     -> "func" __ %name _ "(" argdeflist ")" __ statement
+funcdef     -> "funcdef" __ %name _ "(" argdeflist ")" __ statement
     {% (v) => ({type: 'func', name: v[2], args: v[5], body: v[8]}) %}
 
 argdeflist  ->  (_ %name (_ "," _ %name):*):? _
