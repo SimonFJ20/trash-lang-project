@@ -2,6 +2,7 @@ import { readFile, writeFile } from "fs/promises";
 import { Grammar, Parser } from "nearley";
 import LangGrammar from "./grammar";
 import { evaluate } from "./interpreter";
+import { SymbolTable } from "./value";
 
 const getFilename = () => {
     const filename = process.argv[2];
@@ -19,7 +20,9 @@ const main = async () => {
     parser.feed(program);
     const ast = parser.results[0];
     await writeFile('ast.gen.json', JSON.stringify(ast, null, 4));
-    evaluate({}, ast);
+    evaluate({
+        symbols: new SymbolTable()
+    }, ast);
 }
 
 main().catch((catched) => {

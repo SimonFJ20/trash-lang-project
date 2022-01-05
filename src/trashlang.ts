@@ -10,7 +10,7 @@ export namespace TL {
     export type Statements = Statement[];
 
     export type Statement = 
-        Block | FuncDef | IfElse | If | While | VarDef | Expression;
+        Block | FuncDef | IfElse | If | While | VarDec | Expression;
 
     export type FuncDef = {
         type: 'funcdef',
@@ -38,7 +38,7 @@ export namespace TL {
         body: Statement,
     };
 
-    export type VarDef = {
+    export type VarDec = {
         type: 'vardef',
         name: Token,
         value: Expression,
