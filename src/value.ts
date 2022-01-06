@@ -1,4 +1,4 @@
-import { RuntimeError } from "./interpreter";
+import { evaluate, InterpreterContext, RuntimeError } from "./interpreter";
 import { TL } from "./trashlang";
 
 type ValueType = 'null' | 'int' | 'float' | 'bool' | 'char' | 'string' | 'array' | 'object' | 'func';
@@ -45,6 +45,16 @@ export class SymbolTable {
 
     public existsLocally(name: string) {
         return name in this.symbols;
+    }
+
+    public getSymbols() {
+        return this.symbols;
+    }
+
+    public import(table: SymbolTable) {
+        const symbols = table.getSymbols();
+        for (let i in symbols)
+            this.symbols[i] = symbols[i];
     }
 }
 
@@ -139,3 +149,10 @@ export class FuncValue extends Value {
     }
 }
 
+export abstract class BuiltinFunc extends Value {
+    constructor (public args: string[]) {
+        super('func');
+    }
+
+    public abstract execute(symbols: SymbolTable): Value;
+}

@@ -1,3 +1,7 @@
+import "builtins"
+
+print("helol world");
+
 func myFunction(a, b) {
     
 }

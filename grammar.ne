@@ -13,7 +13,7 @@ const lexer = compile({
     char:       {match: /'(?:\\['\\n]|[^\n'\\])'/, value: s => s.slice(1, -1)},
     string:     {match: /"(?:\\["\\n]|[^\n"\\])*"/, value: s => s.slice(1, -1)},
     name:       {match: /[a-zA-Z0-9_]+/, type: keywords({
-        keyword: ['func', 'return', 'let', 'if', 'else', 'while']
+        keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import']
     })},
     lparen:     '(',
     rparen:     ')',
@@ -46,11 +46,11 @@ const lexer = compile({
 
 @lexer lexer
 
-file        -> statements {% id %}
+program     -> statements {% id %}
 
 block       ->  "{" _ statements _ "}"   {% (v) => ({type: 'block', body: v[2]}) %}
 
-statements   ->  (_ statement (sl_ %nl _ statement):*):? _
+statements  ->  (_ statement (sl_ %nl _ statement):*):? _
     {% (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
 statement   ->  block       {% id %}
@@ -59,10 +59,11 @@ statement   ->  block       {% id %}
             |   if          {% id %}
             |   while       {% id %}
             |   vardef      {% id %}
+            |   import      {% id %}
             |   expression  {% id %}
 
-funcdef     -> "funcdef" __ %name _ "(" argdeflist ")" __ statement
-    {% (v) => ({type: 'func', name: v[2], args: v[5], body: v[8]}) %}
+funcdef     -> "func" __ %name _ "(" argdeflist ")" __ statement
+    {% (v) => ({type: 'funcdef', name: v[2], args: v[5], body: v[8]}) %}
 
 argdeflist  ->  (_ %name (_ "," _ %name):*):? _
     {% (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
@@ -78,6 +79,12 @@ while       ->  "while" __ expression __ statement
 
 vardef      ->  "let" __ %name _ ":=" _ expression
     {% (v) => ({type: 'vardef', name: v[2], value: v[6]}) %}
+
+return      ->  "return" __ expression
+    {% (v) => ({type: 'return', value: v[2]}) %}
+
+import      ->  "import" __ %string
+    {% (v) => ({type: 'import', value: v[2]}) %}
 
 expressions ->  (_ expression (_ "," _ expression):*):? _
     {% (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}

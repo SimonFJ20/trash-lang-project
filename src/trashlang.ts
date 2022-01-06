@@ -1,6 +1,6 @@
 
 export namespace TL {
-    export type File = Statements;
+    export type Program = Statements;
 
     export type Block = {
         type: 'block',
@@ -10,7 +10,7 @@ export namespace TL {
     export type Statements = Statement[];
 
     export type Statement = 
-        Block | FuncDef | IfElse | If | While | VarDec | Expression;
+        Block | FuncDef | IfElse | If | While | VarDec | Return | Import | Expression;
 
     export type FuncDef = {
         type: 'funcdef',
@@ -42,6 +42,16 @@ export namespace TL {
         type: 'vardef',
         name: Token,
         value: Expression,
+    };
+
+    export type Return = {
+        type: 'return',
+        value: Expression,
+    };
+
+    export type Import = {
+        type: 'import',
+        value: Token,
     };
 
     export type Expressions = Expression[];

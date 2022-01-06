@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "fs/promises";
-import { Grammar, Parser } from "nearley";
-import LangGrammar from "./grammar";
+
 import { evaluate } from "./interpreter";
+import { parse } from "./parser";
 import { SymbolTable } from "./value";
 
 const getFilename = () => {
@@ -15,10 +15,7 @@ const getFilename = () => {
 
 const main = async () => {
     const filename = getFilename();
-    const parser = new Parser(Grammar.fromCompiled(LangGrammar));
-    const program = (await readFile(filename)).toString();
-    parser.feed(program);
-    const ast = parser.results[0];
+    const ast = parse((await readFile(filename)).toString());
     await writeFile('ast.gen.json', JSON.stringify(ast, null, 4));
     evaluate({
         symbols: new SymbolTable()
