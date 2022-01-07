@@ -2,7 +2,7 @@ import { copyFileSync, readFileSync } from "fs";
 import { parse } from "./parser";
 import { stdlib } from "./builtins";
 import { TL } from "./trashlang";
-import { BuiltinFunc, FuncValue, NullValue, SymbolTable, Value } from "./value";
+import { ArrayValue, BoolValue, BuiltinFunc, CharValue, FloatValue, FuncValue, IntValue, NullValue, ObjectValue, OperationType, StringValue, SymbolTable, Value } from "./value";
 
 type Evaluator<T> = (ctx: InterpreterContext, value: T) => Value;
 
@@ -112,11 +112,37 @@ const import_: Evaluator<TL.Import> = (ctx, {value}) => {
 
 const expression: Evaluator<TL.Expression> = (ctx, e) => {
     switch (e.type) {
+        case 'dot':         return dot(ctx, e as unknown as TL.Dot);
+        case 'array':       return array_(ctx, e as unknown as TL.ArrayLiteral);
         case 'funccall':    return funccall(ctx, e as TL.FuncCall);
-        case 'varassign':   return new NullValue();
-        case 'varaccess':   return new NullValue();
-        default:            return new NullValue();
+        case 'varassign':   return varassign(ctx, e as TL.VarAssign);
+        case 'varaccess':   return varaccess(ctx, e as unknown as TL.VarAccess);
+        case 'modulus':
+        case 'divide':
+        case 'multiply':
+        case 'subtract':
+        case 'add':
+        case 'equal':
+        case 'inequal':
+        case 'lt':
+        case 'gt':
+        case 'lte':
+        case 'gte':         return binaryoperation(ctx, e as TL.BinaryOperation)
+        default:            return literal(ctx, e as TL.Literal);
     }
+}
+
+const dot: Evaluator<TL.Dot> = (ctx, {parent, child}) => {
+    const p = expression(ctx, parent);
+    if (p.type !== 'object')
+        throw new RuntimeError('cannot use \'.\' on non-object');
+    const v = (p as ObjectValue).values[child.value];
+    if (!v) throw new RuntimeError('no child on object with name');
+    return v;
+}
+
+const array_: Evaluator<TL.ArrayLiteral> = (ctx, {values}) => {
+    return new ArrayValue(values.map(v => expression(ctx, v)));
 }
 
 const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
@@ -134,4 +160,66 @@ const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
         return func.execute(symbols);
     else
         return statement({symbols}, func.value);
+}
+
+const varassign: Evaluator<TL.VarAssign> = (ctx, {name, value}) => {
+    const e = expression(ctx, value);
+    if (!ctx.symbols.existsLocally(name.value))
+        throw new RuntimeError('symbol undefined');
+    else
+        ctx.symbols.set(name.value, e);
+    return e;
+}
+
+const varaccess: Evaluator<TL.VarAccess> = (ctx, {name}) => {
+    if (!ctx.symbols.exists(name.value))
+        throw new RuntimeError('symbol undefined');
+    else
+        return ctx.symbols.get(name.value);
+}
+
+const convertTypeToOperationType = (type: string): OperationType => {
+    switch (type) {
+        case 'modulus':     return '==';
+        case 'divide':      return '!=';
+        case 'multiply':    return '<';
+        case 'subtract':    return '<';
+        case 'add':         return '<=';
+        case 'equal':       return '<=';
+        case 'inequal':     return '+';
+        case 'lt':          return '-';
+        case 'gt':          return '*';
+        case 'lte':         return '/';
+        case 'gte':         return '%';
+    }
+    throw new RuntimeError('how tf this get reached');
+}
+
+const binaryoperation: Evaluator<TL.BinaryOperation> = (ctx, {type, left, right}) => {
+    const r = expression(ctx, right);
+    const l = expression(ctx, left);
+    const op = convertTypeToOperationType(type)
+    switch (r.type) {
+        case 'null':    l.doWithNull(op, r as NullValue); break;
+        case 'int':     l.doWithInt(op, r as IntValue); break;
+        case 'float':   l.doWithFloat(op, r as FloatValue); break;
+        case 'bool':    l.doWithBool(op, r as BoolValue); break;
+        case 'char':    l.doWithChar(op, r as CharValue); break;
+        case 'string':  l.doWithString(op, r as StringValue); break;
+        case 'array':   l.doWithArray(op, r as ArrayValue); break;
+        case 'object':  l.doWithObject(op, r as ObjectValue); break;
+        case 'func':    l.doWithFunc(op, r as FuncValue); break;
+    }
+    return l;
+}
+
+const literal: Evaluator<TL.Literal> = (ctx, {type, value}) => {
+    switch (type) {
+        case 'float':   return new FloatValue(parseFloat(value));
+        case 'hex':     return new IntValue(parseInt(value, 16));
+        case 'int':     return new IntValue(parseInt(value, 10));
+        case 'char':    return new CharValue(value);
+        case 'string':  return new StringValue(value);
+    }
+    throw new RuntimeError('how tf this get reached');
 }

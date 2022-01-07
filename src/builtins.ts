@@ -3,7 +3,8 @@ import { ArrayValue, BoolValue, BuiltinFunc, CharValue, FloatValue, FuncValue, I
 export const stdlib = (): SymbolTable => {
     const table = new SymbolTable();
 
-    table.set("print", new Print());
+    table.set('print', new Print());
+    table.set('Object', new ObjectValue({'test': new Tester}))
 
     return table;
 }
@@ -27,6 +28,20 @@ class Print extends BuiltinFunc {
             case 'func':    console.log('func'); break;
         }
         return new NullValue();
+    }
+
+    public clone(): Value {
+        throw new Error("not implemented");
+    }
+}
+
+class Tester extends BuiltinFunc {
+    constructor () {
+        super([]);
+    }
+
+    public execute(symbols: SymbolTable): Value {
+        return new IntValue(5);
     }
 
     public clone(): Value {

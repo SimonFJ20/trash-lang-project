@@ -57,7 +57,18 @@ export namespace TL {
     export type Expressions = Expression[];
 
     export type Expression =
-        FuncCall | VarAssign | VarAccess | BinaryOperation | Literal;
+        Dot | ArrayLiteral | FuncCall | VarAssign | VarAccess | BinaryOperation | Literal;
+
+    export type Dot = {
+        type: 'dot',
+        parent: Expression,
+        child: Token,
+    }
+
+    export type ArrayLiteral = {
+        type: 'array',
+        values: Expressions,
+    }
 
     export type FuncCall = {
         type: 'funccall',

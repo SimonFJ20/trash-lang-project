@@ -15,6 +15,8 @@ const lexer = compile({
     name:       {match: /[a-zA-Z0-9_]+/, type: keywords({
         keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import']
     })},
+    dot:        '.',
+
     lparen:     '(',
     rparen:     ')',
     lbrace:     '{',
@@ -91,6 +93,7 @@ expressions ->  (_ expression (_ "," _ expression):*):? _
 
 
 expression  ->  "(" _ expression _ ")"  {% (v) => v[2] %}
+            |   dot         {% id %}
             |   funccall    {% id %}
             |   varaccess   {% id %}
             |   modulus     {% id %}
@@ -105,6 +108,12 @@ expression  ->  "(" _ expression _ ")"  {% (v) => v[2] %}
             |   lte         {% id %}
             |   gte         {% id %}
             |   literal     {% id %}
+
+dot         ->  expression _ "." _ %name
+    {% (v) => ({type: 'dot', parent: v[0], child: v[4]}) %}
+
+array       ->  "[" expressions "]"
+    {% (v) => ({type: 'array', values: v[1]}) %}
 
 funccall    ->  %name _ "(" expressions ")"
     {% (v) => ({type: 'funccall', name: v[0], args: v[3]}) %}
@@ -150,11 +159,11 @@ gte         ->  expression _ ">=" _ expression
 
 
 
-literal     ->  %float
-            |   %hex
-            |   %int
-            |   %char
-            |   %string
+literal     ->  %float  {% id %}
+            |   %hex    {% id %}
+            |   %int    {% id %}
+            |   %char   {% id %}
+            |   %string {% id %}
 
 _           ->  __:?
 __          ->  (%ws|%nl|%comment_sl|%comment_ml):+

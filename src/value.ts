@@ -1,9 +1,9 @@
 import { evaluate, InterpreterContext, RuntimeError } from "./interpreter";
 import { TL } from "./trashlang";
 
-type ValueType = 'null' | 'int' | 'float' | 'bool' | 'char' | 'string' | 'array' | 'object' | 'func';
+export type ValueType = 'null' | 'int' | 'float' | 'bool' | 'char' | 'string' | 'array' | 'object' | 'func';
 
-type OperationType = '==' | '!=' | '<' | '<' | '<=' | '<=' | '+' | '-' | '*' | '/' | '%'
+export type OperationType = '==' | '!=' | '<' | '<' | '<=' | '<=' | '+' | '-' | '*' | '/' | '%';
 
 
 export abstract class Value {
@@ -15,6 +15,7 @@ export abstract class Value {
     public doWithNull(op: OperationType, value: NullValue): Value { throw new RuntimeError('illegal operation'); }
     public doWithInt(op: OperationType, value: IntValue): Value { throw new RuntimeError('illegal operation'); }
     public doWithFloat(op: OperationType, value: FloatValue): Value { throw new RuntimeError('illegal operation'); }
+    public doWithBool(op: OperationType, value: BoolValue): Value { throw new RuntimeError('illegal operation'); }
     public doWithChar(op: OperationType, value: CharValue): Value { throw new RuntimeError('illegal operation'); }
     public doWithString(op: OperationType, value: StringValue): Value { throw new RuntimeError('illegal operation'); }
     public doWithArray(op: OperationType, value: ArrayValue): Value { throw new RuntimeError('illegal operation'); }
@@ -130,12 +131,12 @@ export class ArrayValue extends Value {
 }
 
 export class ObjectValue extends Value {
-    constructor (public value: {[key: string]: Value}) {
+    constructor (public values: {[key: string]: Value}) {
         super('object');
     }
 
     public clone(): ObjectValue {
-        return new ObjectValue(this.value);
+        return new ObjectValue(this.values);
     }
 }
 

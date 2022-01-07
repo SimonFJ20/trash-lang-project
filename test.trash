@@ -3,5 +3,11 @@ import "builtins"
 print("helol world");
 
 func myFunction(a, b) {
-    
+    print(a)
+    print(b)
+    print("workey workey")
 }
+
+Object.test()
+
+myFunction(1, "bruh");
