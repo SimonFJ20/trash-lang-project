@@ -4,10 +4,41 @@ import { stdlib } from "./builtins";
 import { TL } from "./trashlang";
 import { ArrayValue, BoolValue, BuiltinFunc, CharValue, FloatValue, FuncValue, IntValue, NullValue, ObjectValue, OperationType, StringValue, SymbolTable, Value } from "./value";
 
-type Evaluator<T> = (ctx: InterpreterContext, value: T) => Value;
+type Evaluator<T, IC=InterpreterContext> = (ctx: IC, value: T) => Value;
+
+enum DefStages {
+    INSIGNIFICANT   = 0,
+    TOPLEVEL        = 1,
+    FUNCTION        = TOPLEVEL * 2,
+    LOOP            = FUNCTION * 2,
+    CONDITIONAL     = LOOP * 2,
+}
+
+class DefinitionStage {
+    constructor (public stage: DefStages) {}
+
+    public set(stage: DefStages): this {
+        this.stage |= stage;
+        return this;
+    }
+
+    public unset(stage: DefStages): this {
+        this.stage &= ~stage;
+        return this;
+    }
+
+    public is(stage: DefStages): boolean {
+        return (this.stage & stage) !== 0;
+    }
+
+    public copy(): DefinitionStage {
+        return new DefinitionStage(this.stage);
+    }
+}
 
 export type InterpreterContext = {
-    symbols: SymbolTable
+    symbols: SymbolTable,
+    defStage: DefinitionStage,
 }
 
 export class RuntimeError extends Error {
@@ -17,7 +48,12 @@ export class RuntimeError extends Error {
     }
 }
 
-export const evaluate: Evaluator<TL.Program> = (ctx, program) => {
+export const evaluate: Evaluator<TL.Program, Partial<InterpreterContext>> = (sctx, program) => {
+    const ctx: InterpreterContext = {
+        symbols: new SymbolTable(),
+        defStage: new DefinitionStage(DefStages.TOPLEVEL),
+        ...sctx,
+    };
     return statements(ctx, program);
 }
 
@@ -46,7 +82,7 @@ const statement: Evaluator<TL.Statement> = (ctx, statement) => {
 }
 
 const block: Evaluator<TL.Block> = (ctx, block) => {
-    return statements({symbols: new SymbolTable(ctx.symbols)}, block.body);
+    return statements({...ctx, symbols: new SymbolTable(ctx.symbols)}, block.body);
 }
 
 const funcdef: Evaluator<TL.FuncDef> = (ctx, {name, args, body}) => {
@@ -64,23 +100,26 @@ const funcdef: Evaluator<TL.FuncDef> = (ctx, {name, args, body}) => {
 }
 
 const ifelse: Evaluator<TL.IfElse> = (ctx, {condition, truthy, falsy}) => {
-    const value = expression(ctx, condition);
+    const nctx = {...ctx, defstage: ctx.defStage.copy().unset(DefStages.TOPLEVEL)};
+    const value = expression(nctx, condition);
     if (value.asBool().value)
-        return statement(ctx, truthy);
+        return statement(nctx, truthy);
     else
-        return statement(ctx, falsy);
+        return statement(nctx, falsy);
 }
 
 const if_: Evaluator<TL.If> = (ctx, {condition, body}) => {
-    const value = expression(ctx, condition);
+    const nctx = {...ctx, defstage: ctx.defStage.copy().unset(DefStages.TOPLEVEL)};
+    const value = expression(nctx, condition);
     if (value.asBool().value)
-        return statement(ctx, body);
+        return statement(nctx, body);
     return new NullValue();
 }
 
 const while_: Evaluator<TL.While> = (ctx, {condition, body}) => {
-    while (expression(ctx, condition).asBool().value)
-        statement(ctx, body);
+    const nctx = {...ctx, defstage: ctx.defStage.copy().unset(DefStages.TOPLEVEL)};
+    while (expression(nctx, condition).asBool().value)
+        statement(nctx, body);
     return new NullValue();
 }
 
@@ -93,15 +132,20 @@ const vardec: Evaluator<TL.VarDec> = (ctx, {name, value}) => {
 }
 
 const return_: Evaluator<TL.Return> = (ctx, {value}) => {
+    if (!ctx.defStage.is(DefStages.FUNCTION))
+        throw new RuntimeError('cannot return out of something thats not a function');
     return expression(ctx, value);
 }
 
 const import_: Evaluator<TL.Import> = (ctx, {value}) => {
+    if (!ctx.defStage.is(DefStages.TOPLEVEL))
+        throw new RuntimeError('imports only allowed at top level');
     const path = value.value;
     if (path === 'builtins')
         ctx.symbols.import(stdlib());
     else {
         const nctx = {
+            ...ctx,
             symbols: new SymbolTable()
         }; 
         evaluate(nctx, parse(readFileSync(path).toString()))
@@ -157,7 +201,7 @@ const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
     if (func instanceof BuiltinFunc)
         return func.execute(symbols);
     else
-        return statement({symbols}, func.value);
+        return statement({...ctx, symbols, defStage: ctx.defStage.unset(DefStages.TOPLEVEL)}, func.value);
 }
 
 const varassign: Evaluator<TL.VarAssign> = (ctx, {name, value}) => {

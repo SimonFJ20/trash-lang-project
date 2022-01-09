@@ -4,7 +4,7 @@ export const stdlib = (): SymbolTable => {
     const table = new SymbolTable();
 
     table.set('print', new Print());
-    table.set('Object', new ObjectValue({'test': new Tester}))
+    table.set('Object', new ObjectValue({'test': new ObjectGlobal.Tester}));
 
     return table;
 }
@@ -35,16 +35,28 @@ class Print extends BuiltinFunc {
     }
 }
 
-class Tester extends BuiltinFunc {
-    constructor () {
-        super([]);
+namespace ObjectGlobal {
+
+    export class Tester extends BuiltinFunc {
+        constructor () {
+            super([]);
+        }
+    
+        public execute(symbols: SymbolTable): Value {
+            return new IntValue(5);
+        }
     }
 
-    public execute(symbols: SymbolTable): Value {
-        return new IntValue(5);
+    export class New extends BuiltinFunc {
+        constructor () {
+            super([]);
+        }
+
+        public execute(symbols: SymbolTable): Value {
+            return new ObjectValue({});
+        }
     }
 
-    public clone(): Value {
-        throw new Error("not implemented");
-    }
 }
+
+
