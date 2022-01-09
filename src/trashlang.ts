@@ -72,7 +72,7 @@ export namespace TL {
 
     export type FuncCall = {
         type: 'funccall',
-        name: Token,
+        name: Expression,
         args: Expressions,
     };
 

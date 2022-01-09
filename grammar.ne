@@ -94,6 +94,7 @@ expressions ->  (_ expression (_ "," _ expression):*):? _
 
 expression  ->  "(" _ expression _ ")"  {% (v) => v[2] %}
             |   dot         {% id %}
+            |   array       {% id %}
             |   funccall    {% id %}
             |   varaccess   {% id %}
             |   modulus     {% id %}
@@ -115,7 +116,7 @@ dot         ->  expression _ "." _ %name
 array       ->  "[" expressions "]"
     {% (v) => ({type: 'array', values: v[1]}) %}
 
-funccall    ->  %name _ "(" expressions ")"
+funccall    ->  expression _ "(" expressions ")"
     {% (v) => ({type: 'funccall', name: v[0], args: v[3]}) %}
 
 varassign   ->  %name _ ":=" _ expression

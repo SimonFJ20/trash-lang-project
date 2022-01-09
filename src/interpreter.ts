@@ -146,9 +146,7 @@ const array_: Evaluator<TL.ArrayLiteral> = (ctx, {values}) => {
 }
 
 const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
-    if (!ctx.symbols.exists(name.value))
-        throw new RuntimeError('function undefined');
-    const func = ctx.symbols.get(name.value) as FuncValue;
+    const func = expression(ctx, name) as FuncValue;
     if (func.type !== 'func' && !(func instanceof FuncValue))
         throw new RuntimeError('not callable');
     if (func.args.length !== args.length)
