@@ -12,6 +12,33 @@ export namespace TL {
     export type Statement = 
         Block | FuncDef | IfElse | If | While | VarDec | Return | Import | Expression;
 
+    export type ClassDef = { // type: 'classdef', name: v[2], properties: v[5]}
+        type: 'funcdef',
+        name: Token,
+        properties: Property[],
+    };
+
+    // {type: 'methoddef', name: v[1], args: v[4], body: v[7], static: v[0] !== null}
+    // {type: 'fielddef', name: v[1], value: v[5], static: v[0] !== null}
+    export type Property =
+        (MethodDef | FieldDef)
+    & {
+        static: boolean,
+    };
+
+    export type MethodDef = {
+        type: 'methoddef',
+        name: Token,
+        args: Token[],
+        body: Statement,
+    }
+
+    export type FieldDef = {
+        type: 'fielddef',
+        name: Token,
+        value: Expression,
+    }
+
     export type FuncDef = {
         type: 'funcdef',
         name: Token,

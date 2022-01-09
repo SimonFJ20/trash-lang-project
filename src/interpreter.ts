@@ -12,6 +12,8 @@ enum DefStages {
     FUNCTION        = TOPLEVEL * 2,
     LOOP            = FUNCTION * 2,
     CONDITIONAL     = LOOP * 2,
+    CLASS           = CONDITIONAL * 2,
+    METHOD          = CLASS * 2,
 }
 
 class DefinitionStage {
@@ -69,6 +71,7 @@ const statements: Evaluator<TL.Statements> = (ctx, statements) => {
 const statement: Evaluator<TL.Statement> = (ctx, statement) => {
     switch (statement.type) {
         case 'block':   block(ctx, statement as TL.Block); break;
+        case 'classdef':classdef(ctx, statement as unknown as TL.ClassDef); break;
         case 'funcdef': funcdef(ctx, statement as TL.FuncDef); break;
         case 'ifelse':  ifelse(ctx, statement as TL.IfElse); break;
         case 'if':      if_(ctx, statement as TL.If); break;
@@ -83,6 +86,26 @@ const statement: Evaluator<TL.Statement> = (ctx, statement) => {
 
 const block: Evaluator<TL.Block> = (ctx, block) => {
     return statements({...ctx, symbols: new SymbolTable(ctx.symbols)}, block.body);
+}
+
+const classdef: Evaluator<TL.ClassDef> = (ctx, {name, properties}) => {
+    if (!ctx.defStage.is(DefStages.TOPLEVEL))
+        throw new RuntimeError('classes can only be defined at top level');
+    if (ctx.symbols.exists(name.value))
+        throw new RuntimeError('cannot reuse symbol for class definition');
+    const constructor = properties.find(p => p.name.value === 'constructor');
+    if (!constructor)
+        throw new RuntimeError('could not find constructor in class');
+    const statics = properties.filter(p => p.static);
+    const values = statics.reduce<{[key: string]: Value}>((values, p) => {
+        if (p.type === 'methoddef')
+            values[p.name.value] = new FuncValue(p.body, p.args.map(({value}) => value), ctx.symbols);
+        else if (p.type === 'fielddef')
+            values[p.name.value] = expression(ctx, p.value);
+        return values; 
+    }, {});
+    ctx.symbols.set(name.value, new ObjectValue(values));
+    return new NullValue();
 }
 
 const funcdef: Evaluator<TL.FuncDef> = (ctx, {name, args, body}) => {

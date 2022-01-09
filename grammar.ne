@@ -13,7 +13,7 @@ const lexer = compile({
     char:       {match: /'(?:\\['\\n]|[^\n'\\])'/, value: s => s.slice(1, -1)},
     string:     {match: /"(?:\\["\\n]|[^\n"\\])*"/, value: s => s.slice(1, -1)},
     name:       {match: /[a-zA-Z0-9_]+/, type: keywords({
-        keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import']
+        keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import', 'class', 'static']
     })},
     dot:        '.',
 
@@ -56,6 +56,7 @@ statements  ->  (_ statement (sl_ %nl _ statement):*):? _
     {% (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
 statement   ->  block       {% id %}
+            |   classdef    {% id %}
             |   funcdef     {% id %}
             |   ifelse      {% id %}
             |   if          {% id %}
@@ -63,6 +64,21 @@ statement   ->  block       {% id %}
             |   vardef      {% id %}
             |   import      {% id %}
             |   expression  {% id %}
+
+classdef    ->  "class" __ %name _ "{" properties "}"
+    {% (v) => ({type: 'classdef', name: v[2], properties: v[5]}) %}
+
+properties  ->  (_ property (sl_ %nl _ property):*):? _
+    {% (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
+
+property    ->  methoddef   {% id %}
+            |   fielddef    {% id %}
+
+methoddef   ->  ("static" __):? %name _ "(" argdeflist ")" __ statement
+    {% (v) => ({type: 'methoddef', name: v[1], args: v[4], body: v[7], static: v[0] !== null}) %}
+
+fielddef    ->  ("static" __):? %name _ ":=" _ expression
+    {% (v) => ({type: 'fielddef', name: v[1], value: v[5], static: v[0] !== null}) %}
 
 funcdef     -> "func" __ %name _ "(" argdeflist ")" __ statement
     {% (v) => ({type: 'funcdef', name: v[2], args: v[5], body: v[8]}) %}

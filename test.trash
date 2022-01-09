@@ -1,5 +1,23 @@
 import "builtins"
 
+class MyClass {
+
+    a := 5
+
+    doStuff() {
+        print(this.a)
+    }
+
+    static print() {
+        print("MyClass: hello")
+    }
+
+    constructor() {
+
+    }
+
+}
+
 print("helol world");
 
 func myFunction(a, b) {
@@ -9,5 +27,7 @@ func myFunction(a, b) {
 }
 
 Object.test()
+
+MyClass.print()
 
 myFunction(1, "bruh");
