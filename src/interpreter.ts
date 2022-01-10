@@ -7,7 +7,6 @@ import { ArrayValue, BoolValue, BuiltinFunc, CharValue, FloatValue, FuncValue, I
 type Evaluator<T, IC=InterpreterContext> = (ctx: IC, value: T) => Value;
 
 enum DefStages {
-    INSIGNIFICANT   = 0,
     TOPLEVEL        = 1,
     FUNCTION        = TOPLEVEL * 2,
     LOOP            = FUNCTION * 2,
@@ -268,17 +267,7 @@ const binaryoperation: Evaluator<TL.BinaryOperation> = (ctx, {type, left, right}
     const r = expression(ctx, right);
     const l = expression(ctx, left);
     const op = convertTypeToOperationType(type)
-    switch (r.type) {
-        case 'null':    l.doWithNull(op, r as NullValue); break;
-        case 'int':     l.doWithInt(op, r as IntValue); break;
-        case 'float':   l.doWithFloat(op, r as FloatValue); break;
-        case 'bool':    l.doWithBool(op, r as BoolValue); break;
-        case 'char':    l.doWithChar(op, r as CharValue); break;
-        case 'string':  l.doWithString(op, r as StringValue); break;
-        case 'array':   l.doWithArray(op, r as ArrayValue); break;
-        case 'object':  l.doWithObject(op, r as ObjectValue); break;
-        case 'func':    l.doWithFunc(op, r as FuncValue); break;
-    }
+    l.doWith(op, r.type, r);
     return l;
 }
 

@@ -12,15 +12,7 @@ export abstract class Value {
     public abstract clone(): Value;
 
     public asBool(): BoolValue { throw new RuntimeError('illegal operation'); }
-    public doWithNull(op: OperationType, value: NullValue): Value { throw new RuntimeError('illegal operation'); }
-    public doWithInt(op: OperationType, value: IntValue): Value { throw new RuntimeError('illegal operation'); }
-    public doWithFloat(op: OperationType, value: FloatValue): Value { throw new RuntimeError('illegal operation'); }
-    public doWithBool(op: OperationType, value: BoolValue): Value { throw new RuntimeError('illegal operation'); }
-    public doWithChar(op: OperationType, value: CharValue): Value { throw new RuntimeError('illegal operation'); }
-    public doWithString(op: OperationType, value: StringValue): Value { throw new RuntimeError('illegal operation'); }
-    public doWithArray(op: OperationType, value: ArrayValue): Value { throw new RuntimeError('illegal operation'); }
-    public doWithObject(op: OperationType, value: ObjectValue): Value { throw new RuntimeError('illegal operation'); }
-    public doWithFunc(op: OperationType, value: FuncValue): Value { throw new RuntimeError('illegal operation'); }
+    public doWith(op: OperationType, type: ValueType, value: NullValue): Value { throw new RuntimeError('illegal operation'); }
 }
 export class SymbolTable {
     private symbols: {[key: string]: Value} = {};
