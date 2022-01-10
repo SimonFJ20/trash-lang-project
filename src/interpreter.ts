@@ -40,7 +40,8 @@ class DefinitionStage {
 
 export type InterpreterContext = {
     symbols: SymbolTable,
-    defStage: DefinitionStage,
+    stage: DefinitionStage,
+    prototypes: {[key: string]: TL.Property[]}
 }
 
 export class RuntimeError extends Error {
@@ -53,7 +54,8 @@ export class RuntimeError extends Error {
 export const evaluate: Evaluator<TL.Program, Partial<InterpreterContext>> = (sctx, program) => {
     const ctx: InterpreterContext = {
         symbols: new SymbolTable(),
-        defStage: new DefinitionStage(DefStages.TOPLEVEL),
+        stage: new DefinitionStage(DefStages.TOPLEVEL),
+        prototypes: {},
         ...sctx,
     };
     return statements(ctx, program);
@@ -89,22 +91,24 @@ const block: Evaluator<TL.Block> = (ctx, block) => {
 }
 
 const classdef: Evaluator<TL.ClassDef> = (ctx, {name, properties}) => {
-    if (!ctx.defStage.is(DefStages.TOPLEVEL))
+    if (!ctx.stage.is(DefStages.TOPLEVEL))
         throw new RuntimeError('classes can only be defined at top level');
     if (ctx.symbols.exists(name.value))
         throw new RuntimeError('cannot reuse symbol for class definition');
     const constructor = properties.find(p => p.name.value === 'constructor');
     if (!constructor)
         throw new RuntimeError('could not find constructor in class');
-    const statics = properties.filter(p => p.static);
-    const values = statics.reduce<{[key: string]: Value}>((values, p) => {
-        if (p.type === 'methoddef')
-            values[p.name.value] = new FuncValue(p.body, p.args.map(({value}) => value), ctx.symbols);
-        else if (p.type === 'fielddef')
-            values[p.name.value] = expression(ctx, p.value);
-        return values; 
-    }, {});
+    const values = properties
+        .filter(p => p.static)
+        .reduce<{[key: string]: Value}>((values, p) => {
+            if (p.type === 'methoddef')
+                values[p.name.value] = new FuncValue(p.body, p.args.map(({value}) => value), ctx.symbols);
+            else if (p.type === 'fielddef')
+                values[p.name.value] = expression(ctx, p.value);
+            return values; 
+        }, {});
     ctx.symbols.set(name.value, new ObjectValue(values));
+    ctx.prototypes[name.value] = properties.filter(p => !p.static);
     return new NullValue();
 }
 
@@ -123,7 +127,7 @@ const funcdef: Evaluator<TL.FuncDef> = (ctx, {name, args, body}) => {
 }
 
 const ifelse: Evaluator<TL.IfElse> = (ctx, {condition, truthy, falsy}) => {
-    const nctx = {...ctx, defstage: ctx.defStage.copy().unset(DefStages.TOPLEVEL)};
+    const nctx = {...ctx, defstage: ctx.stage.copy().unset(DefStages.TOPLEVEL)};
     const value = expression(nctx, condition);
     if (value.asBool().value)
         return statement(nctx, truthy);
@@ -132,7 +136,7 @@ const ifelse: Evaluator<TL.IfElse> = (ctx, {condition, truthy, falsy}) => {
 }
 
 const if_: Evaluator<TL.If> = (ctx, {condition, body}) => {
-    const nctx = {...ctx, defstage: ctx.defStage.copy().unset(DefStages.TOPLEVEL)};
+    const nctx = {...ctx, defstage: ctx.stage.copy().unset(DefStages.TOPLEVEL)};
     const value = expression(nctx, condition);
     if (value.asBool().value)
         return statement(nctx, body);
@@ -140,7 +144,7 @@ const if_: Evaluator<TL.If> = (ctx, {condition, body}) => {
 }
 
 const while_: Evaluator<TL.While> = (ctx, {condition, body}) => {
-    const nctx = {...ctx, defstage: ctx.defStage.copy().unset(DefStages.TOPLEVEL)};
+    const nctx = {...ctx, defstage: ctx.stage.copy().unset(DefStages.TOPLEVEL)};
     while (expression(nctx, condition).asBool().value)
         statement(nctx, body);
     return new NullValue();
@@ -155,13 +159,13 @@ const vardec: Evaluator<TL.VarDec> = (ctx, {name, value}) => {
 }
 
 const return_: Evaluator<TL.Return> = (ctx, {value}) => {
-    if (!ctx.defStage.is(DefStages.FUNCTION))
+    if (!ctx.stage.is(DefStages.FUNCTION))
         throw new RuntimeError('cannot return out of something thats not a function');
     return expression(ctx, value);
 }
 
 const import_: Evaluator<TL.Import> = (ctx, {value}) => {
-    if (!ctx.defStage.is(DefStages.TOPLEVEL))
+    if (!ctx.stage.is(DefStages.TOPLEVEL))
         throw new RuntimeError('imports only allowed at top level');
     const path = value.value;
     if (path === 'builtins')
@@ -224,7 +228,7 @@ const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
     if (func instanceof BuiltinFunc)
         return func.execute(symbols);
     else
-        return statement({...ctx, symbols, defStage: ctx.defStage.unset(DefStages.TOPLEVEL)}, func.value);
+        return statement({...ctx, symbols, stage: ctx.stage.unset(DefStages.TOPLEVEL)}, func.value);
 }
 
 const varassign: Evaluator<TL.VarAssign> = (ctx, {name, value}) => {
