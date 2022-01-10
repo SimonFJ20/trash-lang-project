@@ -1,3 +1,4 @@
+import { InterpreterContext, RuntimeError } from "./interpreter";
 import { ArrayValue, BoolValue, BuiltinFunc, CharValue, FloatValue, FuncValue, IntValue, NullValue, ObjectValue, StringValue, SymbolTable, Value } from "./value";
 
 export const stdlib = (): SymbolTable => {
@@ -14,8 +15,8 @@ class Print extends BuiltinFunc {
         super(['value']);
     }
 
-    public execute(symbols: SymbolTable): Value {
-        const value = symbols.get('value');
+    public execute(ctx: InterpreterContext): Value {
+        const value = ctx.symbols.get('value');
         switch (value.type) {
             case 'null':    console.log('null'); break;
             case 'int':     console.log((value as IntValue).value); break;
@@ -29,10 +30,6 @@ class Print extends BuiltinFunc {
         }
         return new NullValue();
     }
-
-    public clone(): Value {
-        throw new Error("not implemented");
-    }
 }
 
 namespace ObjectGlobal {
@@ -42,7 +39,7 @@ namespace ObjectGlobal {
             super([]);
         }
     
-        public execute(symbols: SymbolTable): Value {
+        public execute(ctx: InterpreterContext): Value {
             return new IntValue(5);
         }
     }
@@ -52,7 +49,7 @@ namespace ObjectGlobal {
             super([]);
         }
 
-        public execute(symbols: SymbolTable): Value {
+        public execute(ctx: InterpreterContext): Value {
             return new ObjectValue({});
         }
     }

@@ -106,6 +106,7 @@ const classdef: Evaluator<TL.ClassDef> = (ctx, {name, properties}) => {
                 values[p.name.value] = expression(ctx, p.value);
             return values; 
         }, {});
+    values['$name'] = new StringValue(name.value);
     ctx.symbols.set(name.value, new ObjectValue(values));
     ctx.prototypes[name.value] = properties.filter(p => !p.static);
     return new NullValue();
@@ -182,8 +183,9 @@ const import_: Evaluator<TL.Import> = (ctx, {value}) => {
 
 const expression: Evaluator<TL.Expression> = (ctx, e) => {
     switch (e.type) {
-        case 'dot':         return dot(ctx, e as unknown as TL.Dot);
         case 'array':       return array_(ctx, e as unknown as TL.ArrayLiteral);
+        case 'dot':         return dot(ctx, e as unknown as TL.Dot);
+        case 'new':         return new_(ctx, e as unknown as TL.New);
         case 'funccall':    return funccall(ctx, e as TL.FuncCall);
         case 'varassign':   return varassign(ctx, e as TL.VarAssign);
         case 'varaccess':   return varaccess(ctx, e as unknown as TL.VarAccess);
@@ -202,6 +204,10 @@ const expression: Evaluator<TL.Expression> = (ctx, e) => {
     }
 }
 
+const array_: Evaluator<TL.ArrayLiteral> = (ctx, {values}) => {
+    return new ArrayValue(values.map(v => expression(ctx, v)));
+}
+
 const dot: Evaluator<TL.Dot> = (ctx, {parent, child}) => {
     const p = expression(ctx, parent);
     if (p.type !== 'object')
@@ -211,8 +217,31 @@ const dot: Evaluator<TL.Dot> = (ctx, {parent, child}) => {
     return v;
 }
 
-const array_: Evaluator<TL.ArrayLiteral> = (ctx, {values}) => {
-    return new ArrayValue(values.map(v => expression(ctx, v)));
+const new_: Evaluator<TL.New> = (ctx, {name, args}) => {
+    const class_ = expression(ctx, name) as ObjectValue;
+    if (class_.type !== 'object')
+        throw new RuntimeError('cannot instanciate non-object');
+    const pName = class_.values['$name'] as StringValue;
+    if (!pName)
+        throw new RuntimeError('object not instanciable');
+    const prototype = ctx.prototypes[pName.value];
+    if (!prototype)
+        throw new RuntimeError('object not instanciable');
+    const values: {[key: string]: Value} = {
+        '$instanceof': new StringValue(pName.value)
+    };
+    const object = new ObjectValue(values);
+    const nst = new SymbolTable(ctx.symbols);
+    nst.set('this', object);
+    const nctx: InterpreterContext = {...ctx, symbols: nst};
+    for (let i in prototype) {
+        const p = prototype[i];
+        if (p.type === 'methoddef')
+            values[p.name.value] = new FuncValue(p.body, p.args.map(({value}) => value), nst);
+        else if (p.type === 'fielddef')
+            values[p.name.value] = expression(nctx, p.value);
+    }
+    return object;
 }
 
 const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
@@ -225,7 +254,7 @@ const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
     for (let i in func.args)
         symbols.set(func.args[i], expression(ctx, args[i]));
     if (func instanceof BuiltinFunc)
-        return func.execute(symbols);
+        return func.execute({...ctx, symbols});
     else
         return statement({...ctx, symbols, stage: ctx.stage.unset(DefStages.TOPLEVEL)}, func.value);
 }

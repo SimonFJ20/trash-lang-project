@@ -13,7 +13,7 @@ const lexer = compile({
     char:       {match: /'(?:\\['\\n]|[^\n'\\])'/, value: s => s.slice(1, -1)},
     string:     {match: /"(?:\\["\\n]|[^\n"\\])*"/, value: s => s.slice(1, -1)},
     name:       {match: /[a-zA-Z0-9_]+/, type: keywords({
-        keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import', 'class', 'static']
+        keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import', 'class', 'static', 'new']
     })},
     dot:        '.',
 
@@ -109,8 +109,9 @@ expressions ->  (_ expression (_ "," _ expression):*):? _
 
 
 expression  ->  "(" _ expression _ ")"  {% (v) => v[2] %}
-            |   dot         {% id %}
             |   array       {% id %}
+            |   dot         {% id %}
+            |   new         {% id %}
             |   funccall    {% id %}
             |   varaccess   {% id %}
             |   modulus     {% id %}
@@ -126,11 +127,14 @@ expression  ->  "(" _ expression _ ")"  {% (v) => v[2] %}
             |   gte         {% id %}
             |   literal     {% id %}
 
+array       ->  "[" expressions "]"
+    {% (v) => ({type: 'array', values: v[1]}) %}
+
 dot         ->  expression _ "." _ %name
     {% (v) => ({type: 'dot', parent: v[0], child: v[4]}) %}
 
-array       ->  "[" expressions "]"
-    {% (v) => ({type: 'array', values: v[1]}) %}
+new         ->  "new" __ funccall
+    {% (v) => ({type: 'new', name: v[2].name, args: v[2].args}) %}
 
 funccall    ->  expression _ "(" expressions ")"
     {% (v) => ({type: 'funccall', name: v[0], args: v[3]}) %}

@@ -31,3 +31,6 @@ Object.test()
 MyClass.print()
 
 myFunction(1, "bruh");
+
+let m := new MyClass(); 
+print(m.doStuff())

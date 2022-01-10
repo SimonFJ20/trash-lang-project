@@ -147,7 +147,7 @@ export abstract class BuiltinFunc extends Value {
         super('func');
     }
 
-    public abstract execute(symbols: SymbolTable): Value;
+    public abstract execute(ctx: InterpreterContext): Value;
     
     public clone(): Value {
         throw new Error("cannot clone built in function");
