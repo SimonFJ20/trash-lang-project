@@ -39,6 +39,7 @@ class DefinitionStage {
 
 export type InterpreterContext = {
     symbols: SymbolTable,
+    imports: string[],
     stage: DefinitionStage,
     prototypes: {[key: string]: TL.Property[]}
 }
@@ -53,6 +54,7 @@ export class RuntimeError extends Error {
 export const evaluate: Evaluator<TL.Program, Partial<InterpreterContext>> = (sctx, program) => {
     const ctx: InterpreterContext = {
         symbols: new SymbolTable(),
+        imports: [],
         stage: new DefinitionStage(DefStages.TOPLEVEL),
         prototypes: {},
         ...sctx,
@@ -168,6 +170,10 @@ const import_: Evaluator<TL.Import> = (ctx, {value}) => {
     if (!ctx.stage.is(DefStages.TOPLEVEL))
         throw new RuntimeError('imports only allowed at top level');
     const path = value.value;
+    if (path in ctx.imports)
+        return new NullValue();
+    else
+        ctx.imports.push(path);
     if (path === 'builtins')
         ctx.symbols.import(stdlib());
     else {
@@ -217,6 +223,17 @@ const dot: Evaluator<TL.Dot> = (ctx, {parent, child}) => {
     return v;
 }
 
+const execute_constructor = (ctx: InterpreterContext, constructor: FuncValue, args: TL.Expressions) => {
+    if (constructor.type !== 'func' && !(constructor instanceof FuncValue))
+        throw new RuntimeError('not callable');
+    if (constructor.args.length !== args.length)
+        throw new RuntimeError('args not matching');
+    const symbols = new SymbolTable(constructor.symbols);
+    for (let i in constructor.args)
+        symbols.set(constructor.args[i], expression(ctx, args[i]));
+    return statement({...ctx, symbols, stage: ctx.stage.unset(DefStages.TOPLEVEL)}, constructor.value);
+}
+
 const new_: Evaluator<TL.New> = (ctx, {name, args}) => {
     const class_ = expression(ctx, name) as ObjectValue;
     if (class_.type !== 'object')
@@ -241,6 +258,9 @@ const new_: Evaluator<TL.New> = (ctx, {name, args}) => {
         else if (p.type === 'fielddef')
             values[p.name.value] = expression(nctx, p.value);
     }
+    const constructor = values['constructor'] as FuncValue;
+    delete values['constructor'];
+    execute_constructor(ctx, constructor, args);
     return object;
 }
 

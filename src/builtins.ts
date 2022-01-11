@@ -1,11 +1,18 @@
 import { InterpreterContext, RuntimeError } from "./interpreter";
 import { ArrayValue, BoolValue, BuiltinFunc, CharValue, FloatValue, FuncValue, IntValue, NullValue, ObjectValue, StringValue, SymbolTable, Value } from "./value";
+import { openSync, readFileSync, writeFileSync, closeSync } from 'fs';
 
 export const stdlib = (): SymbolTable => {
     const table = new SymbolTable();
 
     table.set('print', new Print());
-    table.set('Object', new ObjectValue({'test': new ObjectGlobal.Tester}));
+
+    table.set('file', new ObjectValue({
+        'open': new FileOpen(),
+        'read': new FileRead(),
+        'write': new FileWrite(),
+        'close': new FileClose(),
+    }));
 
     return table;
 }
@@ -32,28 +39,58 @@ class Print extends BuiltinFunc {
     }
 }
 
-namespace ObjectGlobal {
-
-    export class Tester extends BuiltinFunc {
-        constructor () {
-            super([]);
-        }
-    
-        public execute(ctx: InterpreterContext): Value {
-            return new IntValue(5);
-        }
+class FileOpen extends BuiltinFunc {
+    constructor () {
+        super(['filename', 'mode']);
     }
-
-    export class New extends BuiltinFunc {
-        constructor () {
-            super([]);
-        }
-
-        public execute(ctx: InterpreterContext): Value {
-            return new ObjectValue({});
-        }
+    public execute(ctx: InterpreterContext): Value {
+        const filename = ctx.symbols.get('filename') as StringValue;
+        const mode = ctx.symbols.get('mode') as StringValue;
+        if (filename.type !== 'string')
+            throw new RuntimeError('filename must be a string');
+        if (mode.type !== 'string')
+            throw new RuntimeError('file handle mode must be a string');
+        return new IntValue(openSync(filename.value, mode.value));
     }
-
 }
 
+class FileRead extends BuiltinFunc {
+    constructor () {
+        super(['file']);
+    }
+    public execute(ctx: InterpreterContext): Value {
+        const file = ctx.symbols.get('file') as IntValue;
+        if (file.type !== 'int')
+            throw new RuntimeError('file must be an int');
+        return new StringValue(readFileSync(file.value).toString());
+    }
+}
 
+class FileWrite extends BuiltinFunc {
+    constructor () {
+        super(['file', 'content']);
+    }
+    public execute(ctx: InterpreterContext): Value {
+        const file = ctx.symbols.get('file') as IntValue;
+        const content = ctx.symbols.get('content') as StringValue;
+        if (file.type !== 'int')
+            throw new RuntimeError('file must be an int');
+        if (content.type !== 'string')
+            throw new RuntimeError('content must be a string');
+        writeFileSync(file.value, content.value);
+        return new NullValue();
+    }
+}
+
+class FileClose extends BuiltinFunc {
+    constructor () {
+        super(['file']);
+    }
+    public execute(ctx: InterpreterContext): Value {
+        const file = ctx.symbols.get('file') as IntValue;
+        if (file.type !== 'int')
+            throw new RuntimeError('file must be an int');
+        closeSync(file.value);
+        return new NullValue();
+    }
+}

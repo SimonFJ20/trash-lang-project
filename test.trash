@@ -1,36 +1,8 @@
 import "builtins"
+import "lib/std.trash"
 
-class MyClass {
+let file := File.open("README.md", "r");
+let content := File.read(file);
+File.close();
+print(content);
 
-    a := 5
-
-    doStuff() {
-        print(this.a)
-    }
-
-    static print() {
-        print("MyClass: hello")
-    }
-
-    constructor() {
-
-    }
-
-}
-
-print("helol world");
-
-func myFunction(a, b) {
-    print(a)
-    print(b)
-    print("workey workey")
-}
-
-Object.test()
-
-MyClass.print()
-
-myFunction(1, "bruh");
-
-let m := new MyClass(); 
-print(m.doStuff())
