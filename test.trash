@@ -1,8 +1,15 @@
 import "builtins"
-import "lib/std.trash"
+//import "lib/std.trash"
 
-let file := File.open("README.md", "r");
-let content := File.read(file);
-File.close();
-print(content);
+//let file := new File("README.md", "r");
+//let content := file.read();
+//file.close();
+//print(content);
+//
+//file := new File("out.txt", "w");
+//file.write("hellop world");
+//file.close()
 
+let a := 5
+print(a)
+a := 3

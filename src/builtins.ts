@@ -5,9 +5,13 @@ import { openSync, readFileSync, writeFileSync, closeSync } from 'fs';
 export const stdlib = (): SymbolTable => {
     const table = new SymbolTable();
 
+    table.set('null', new NullValue());
+    table.set('false', new BoolValue(false));
+    table.set('true', new BoolValue(true));
+
     table.set('print', new Print());
 
-    table.set('file', new ObjectValue({
+    table.set('BuiltinFile', new ObjectValue({
         'open': new FileOpen(),
         'read': new FileRead(),
         'write': new FileWrite(),

@@ -1,4 +1,23 @@
 import "builtins"
 
+class File {
+    file := null
 
+    constructor (filename, mode) {
+        this.file := BuiltinFile.open(filename, mode)
+    }
+
+    read() {
+        return BuiltinFile.read(this.file)
+    }
+
+    write(content) {
+        BuiltinFile.write(this.file, content)
+    }
+
+    close() {
+        BuiltinFile.close(this.file)
+    }
+
+}
 

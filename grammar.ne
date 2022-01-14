@@ -62,6 +62,7 @@ statement   ->  block       {% id %}
             |   if          {% id %}
             |   while       {% id %}
             |   vardef      {% id %}
+            |   return      {% id %}
             |   import      {% id %}
             |   expression  {% id %}
 
@@ -113,6 +114,7 @@ expression  ->  "(" _ expression _ ")"  {% (v) => v[2] %}
             |   dot         {% id %}
             |   new         {% id %}
             |   funccall    {% id %}
+            |   varassign   {% id %}
             |   varaccess   {% id %}
             |   modulus     {% id %}
             |   divide      {% id %}
@@ -139,11 +141,14 @@ new         ->  "new" __ funccall
 funccall    ->  expression _ "(" expressions ")"
     {% (v) => ({type: 'funccall', name: v[0], args: v[3]}) %}
 
-varassign   ->  %name _ ":=" _ expression
+varassign   ->  selector _ ":=" _ expression
     {% (v) => ({type: 'varassign', name: v[0], value: v[4]}) %}
 
-varaccess   ->  %name
+varaccess   ->  selector
     {% (v) => ({type: 'varaccess', name: v[0]}) %}
+
+selector    ->  %name (_ "." _ %name):*
+    {% (v) => ({type: 'selector', names: [v[0], ...v[1].map((v: any) => v[3])]}) %}
 
 modulus     ->  expression _ "%" _ expression
     {% (v) => ({type: 'modulus', left: v[0], right: v[4]}) %}
@@ -177,8 +182,6 @@ lte         ->  expression _ "<=" _ expression
 
 gte         ->  expression _ ">=" _ expression
     {% (v) => ({type: 'gte', left: v[0], right: v[4]}) %}
-
-
 
 literal     ->  %float  {% id %}
             |   %hex    {% id %}

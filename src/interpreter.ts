@@ -276,23 +276,57 @@ const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
     if (func instanceof BuiltinFunc)
         return func.execute({...ctx, symbols});
     else
-        return statement({...ctx, symbols, stage: ctx.stage.unset(DefStages.TOPLEVEL)}, func.value);
+        return statement({...ctx, symbols, stage: ctx.stage.unset(DefStages.TOPLEVEL).set(DefStages.FUNCTION)}, func.value);
 }
 
-const varassign: Evaluator<TL.VarAssign> = (ctx, {name, value}) => {
-    const e = expression(ctx, value);
-    if (!ctx.symbols.existsLocally(name.value))
-        throw new RuntimeError('symbol undefined');
-    else
-        ctx.symbols.set(name.value, e);
-    return e;
+const varassign: Evaluator<TL.VarAssign> = (ctx, v) => {
+    const {name, value} = v;
+    if (name.type === 'name') {
+        const e = expression(ctx, value);
+        if (!ctx.symbols.exists(name.value))
+            throw new RuntimeError('symbol undefined');
+        else
+            ctx.symbols.set(name.value, e);
+        return e;
+    } else if (name.type === 'dot') {
+        const {parent, child} = name as TL.Dot;
+        const object = expression(ctx, parent);
+        if (object.type !== 'object' || !(object instanceof ObjectValue))
+            throw new RuntimeError('cannot use \'.\' on non-object');
+        if (!(child.value in object.values))
+            throw new RuntimeError('field does not exist on object');
+        return object.values[child.value] = expression(ctx, value);
+    }
+    console.log(v)
+    throw new RuntimeError('not assignable');
 }
 
 const varaccess: Evaluator<TL.VarAccess> = (ctx, {name}) => {
+    const sres = selector(ctx, name);
     if (!ctx.symbols.exists(name.value))
         throw new RuntimeError('symbol undefined');
     else
         return ctx.symbols.get(name.value);
+}
+
+type SelectorObject = {type: 'selector', value: Value};
+type SelectorVar = {type: 'var', value: string};
+type SelectorRes = SelectorVar|SelectorObject
+
+const selector = (ctx: InterpreterContext, {names}: TL.Selector): SelectorRes => {
+    if (names.length === 1)
+        return {type: 'var', value: names[0].value}
+    else {
+        const parent = names.slice(1, -1).reduce<Value>((acc, curr) => {
+            if (!acc || acc.type !== 'object' || !(acc instanceof ObjectValue))
+                throw new Error('cant dot operate on a non-object');
+            return acc.values[curr.value];
+        }, ctx.symbols.get(names[0].value)) as ObjectValue;
+        if (!(names[names.length - 1].value in parent.values))
+            throw new RuntimeError('field does not exist on object');
+        const child = parent.values[names[names.length - 1].value];
+        return {type: 'selector', value: child};
+    }
 }
 
 const convertTypeToOperationType = (type: string): OperationType => {

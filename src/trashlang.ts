@@ -111,14 +111,19 @@ export namespace TL {
 
     export type VarAssign = {
         type: 'varassign',
-        name: Token,
+        name: Selector,
         value: Expression,
     };
 
     export type VarAccess = {
         type: 'varassign',
-        name: Token,
+        name: Selector,
     };
+
+    export type Selector = {
+        type: 'selector',
+        names: Token[],
+    }
 
     export type BinaryOperation = {
         type: 'modulus' | 'divide' | 'multiply' | 'subtract' | 'add'
