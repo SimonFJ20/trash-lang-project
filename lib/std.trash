@@ -1,5 +1,10 @@
 import "builtins"
 
+func println(value) {
+    print(value)
+    print('\n')
+}
+
 class File {
     file := null
 

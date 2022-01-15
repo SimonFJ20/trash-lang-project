@@ -73,18 +73,17 @@ const statements: Evaluator<TL.Statements> = (ctx, statements) => {
 
 const statement: Evaluator<TL.Statement> = (ctx, statement) => {
     switch (statement.type) {
-        case 'block':   block(ctx, statement as TL.Block); break;
-        case 'classdef':classdef(ctx, statement as unknown as TL.ClassDef); break;
-        case 'funcdef': funcdef(ctx, statement as TL.FuncDef); break;
-        case 'ifelse':  ifelse(ctx, statement as TL.IfElse); break;
-        case 'if':      if_(ctx, statement as TL.If); break;
-        case 'while':   while_(ctx, statement as TL.While); break;
-        case 'vardef':  vardec(ctx, statement as TL.VarDec); break;
+        case 'block':   return block(ctx, statement as TL.Block); break;
+        case 'classdef':return classdef(ctx, statement as unknown as TL.ClassDef); break;
+        case 'funcdef': return funcdef(ctx, statement as TL.FuncDef); break;
+        case 'ifelse':  return ifelse(ctx, statement as TL.IfElse); break;
+        case 'if':      return if_(ctx, statement as TL.If); break;
+        case 'while':   return while_(ctx, statement as TL.While); break;
+        case 'vardef':  return vardec(ctx, statement as TL.VarDec); break;
         case 'return':  return return_(ctx, statement as TL.Return); break;
-        case 'import':  import_(ctx, statement as TL.Import); break;
-        default:        expression(ctx, statement as TL.Expression); break;
+        case 'import':  return import_(ctx, statement as TL.Import); break;
+        default:        return expression(ctx, statement as TL.Expression); break;
     }
-    return new NullValue();
 }
 
 const block: Evaluator<TL.Block> = (ctx, block) => {
@@ -194,7 +193,6 @@ const expression: Evaluator<TL.Expression> = (ctx, e) => {
         case 'new':         return new_(ctx, e as unknown as TL.New);
         case 'funccall':    return funccall(ctx, e as TL.FuncCall);
         case 'varassign':   return varassign(ctx, e as TL.VarAssign);
-        case 'varaccess':   return varaccess(ctx, e as unknown as TL.VarAccess);
         case 'modulus':
         case 'divide':
         case 'multiply':
@@ -206,6 +204,7 @@ const expression: Evaluator<TL.Expression> = (ctx, e) => {
         case 'gt':
         case 'lte':
         case 'gte':         return binaryoperation(ctx, e as TL.BinaryOperation)
+        case 'identifier':  return varaccess(ctx, e as unknown as TL.Identifier);
         default:            return literal(ctx, e as TL.Literal);
     }
 }
@@ -276,57 +275,38 @@ const funccall: Evaluator<TL.FuncCall> = (ctx, {name, args}) => {
     if (func instanceof BuiltinFunc)
         return func.execute({...ctx, symbols});
     else
-        return statement({...ctx, symbols, stage: ctx.stage.unset(DefStages.TOPLEVEL).set(DefStages.FUNCTION)}, func.value);
+        return statement({
+            ...ctx,
+            symbols,
+            stage:
+            ctx.stage
+                .unset(DefStages.TOPLEVEL)
+                .set(DefStages.FUNCTION)
+        }, func.value);
 }
 
 const varassign: Evaluator<TL.VarAssign> = (ctx, v) => {
-    const {name, value} = v;
-    if (name.type === 'name') {
-        const e = expression(ctx, value);
-        if (!ctx.symbols.exists(name.value))
-            throw new RuntimeError('symbol undefined');
+    const value = expression(ctx, v.value);
+    if (v.name.type === 'identifier') {
+        const id = identifier(ctx, v.name as TL.Identifier);
+        if (id.type === 'symbol')
+            if (!ctx.symbols.exists(id.value))
+                    throw new RuntimeError('symbol undefined');
+                else
+                    ctx.symbols.set(id.value, value);
         else
-            ctx.symbols.set(name.value, e);
-        return e;
-    } else if (name.type === 'dot') {
-        const {parent, child} = name as TL.Dot;
-        const object = expression(ctx, parent);
-        if (object.type !== 'object' || !(object instanceof ObjectValue))
-            throw new RuntimeError('cannot use \'.\' on non-object');
-        if (!(child.value in object.values))
-            throw new RuntimeError('field does not exist on object');
-        return object.values[child.value] = expression(ctx, value);
+            id.parent.values[id.child] = value;
+        return value;
     }
-    console.log(v)
     throw new RuntimeError('not assignable');
 }
 
-const varaccess: Evaluator<TL.VarAccess> = (ctx, {name}) => {
-    const sres = selector(ctx, name);
-    if (!ctx.symbols.exists(name.value))
-        throw new RuntimeError('symbol undefined');
+const varaccess: Evaluator<TL.Identifier> = (ctx, id) => {
+    const res = identifier(ctx, id);
+    if (res.type === 'symbol')
+        return ctx.symbols.get(res.value);
     else
-        return ctx.symbols.get(name.value);
-}
-
-type SelectorObject = {type: 'selector', value: Value};
-type SelectorVar = {type: 'var', value: string};
-type SelectorRes = SelectorVar|SelectorObject
-
-const selector = (ctx: InterpreterContext, {names}: TL.Selector): SelectorRes => {
-    if (names.length === 1)
-        return {type: 'var', value: names[0].value}
-    else {
-        const parent = names.slice(1, -1).reduce<Value>((acc, curr) => {
-            if (!acc || acc.type !== 'object' || !(acc instanceof ObjectValue))
-                throw new Error('cant dot operate on a non-object');
-            return acc.values[curr.value];
-        }, ctx.symbols.get(names[0].value)) as ObjectValue;
-        if (!(names[names.length - 1].value in parent.values))
-            throw new RuntimeError('field does not exist on object');
-        const child = parent.values[names[names.length - 1].value];
-        return {type: 'selector', value: child};
-    }
+        return res.parent.values[res.child];
 }
 
 const convertTypeToOperationType = (type: string): OperationType => {
@@ -354,12 +334,41 @@ const binaryoperation: Evaluator<TL.BinaryOperation> = (ctx, {type, left, right}
     return l;
 }
 
+type IdentifierRes = {
+    type: 'selector',
+    parent: ObjectValue,
+    child: string,
+} | {
+    type: 'symbol',
+    value: string,
+}
+
+const identifier = (ctx: InterpreterContext, {value}: TL.Identifier): IdentifierRes => {
+    if (value.type === 'selector') {
+        const selector = value as TL.Selector;
+        const parent = expression(ctx, selector.parent) as ObjectValue;
+        if (parent.type !== 'object')
+            throw new Error('cannot use selector on non-object');
+        if (!(selector.child.value in parent.values))
+            throw new Error('field does not exist on object');
+        return {
+            type: 'selector',
+            parent,
+            child: selector.child.value,
+        };
+    } else {
+        const token = value as TL.Token;
+        return {type: 'symbol', value: token.value}
+    }
+}
+
+
 const literal: Evaluator<TL.Literal> = (ctx, {type, value}) => {
     switch (type) {
         case 'float':   return new FloatValue(parseFloat(value));
         case 'hex':     return new IntValue(parseInt(value, 16));
         case 'int':     return new IntValue(parseInt(value, 10));
-        case 'char':    return new CharValue(value);
+        case 'char':    return new CharValue(value.replace('\\n', '\n'));
         case 'string':  return new StringValue(value);
     }
     throw new RuntimeError('how tf this get reached');

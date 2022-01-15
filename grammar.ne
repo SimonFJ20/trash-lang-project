@@ -108,14 +108,11 @@ import      ->  "import" __ %string
 expressions ->  (_ expression (_ "," _ expression):*):? _
     {% (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
-
 expression  ->  "(" _ expression _ ")"  {% (v) => v[2] %}
             |   array       {% id %}
-            |   dot         {% id %}
             |   new         {% id %}
             |   funccall    {% id %}
             |   varassign   {% id %}
-            |   varaccess   {% id %}
             |   modulus     {% id %}
             |   divide      {% id %}
             |   multiply    {% id %}
@@ -128,12 +125,10 @@ expression  ->  "(" _ expression _ ")"  {% (v) => v[2] %}
             |   lte         {% id %}
             |   gte         {% id %}
             |   literal     {% id %}
+            |   identifier  {% id %}
 
 array       ->  "[" expressions "]"
     {% (v) => ({type: 'array', values: v[1]}) %}
-
-dot         ->  expression _ "." _ %name
-    {% (v) => ({type: 'dot', parent: v[0], child: v[4]}) %}
 
 new         ->  "new" __ funccall
     {% (v) => ({type: 'new', name: v[2].name, args: v[2].args}) %}
@@ -141,14 +136,8 @@ new         ->  "new" __ funccall
 funccall    ->  expression _ "(" expressions ")"
     {% (v) => ({type: 'funccall', name: v[0], args: v[3]}) %}
 
-varassign   ->  selector _ ":=" _ expression
+varassign   ->  expression _ ":=" _ expression
     {% (v) => ({type: 'varassign', name: v[0], value: v[4]}) %}
-
-varaccess   ->  selector
-    {% (v) => ({type: 'varaccess', name: v[0]}) %}
-
-selector    ->  %name (_ "." _ %name):*
-    {% (v) => ({type: 'selector', names: [v[0], ...v[1].map((v: any) => v[3])]}) %}
 
 modulus     ->  expression _ "%" _ expression
     {% (v) => ({type: 'modulus', left: v[0], right: v[4]}) %}
@@ -182,6 +171,12 @@ lte         ->  expression _ "<=" _ expression
 
 gte         ->  expression _ ">=" _ expression
     {% (v) => ({type: 'gte', left: v[0], right: v[4]}) %}
+
+identifier  ->  (selector|%name)
+    {% (v) => ({type: 'identifier', value: v[0][0]}) %}
+
+selector    ->  expression _ "." _ %name
+    {% (v) => ({type: 'selector', parent: v[0], child: v[4]}) %}
 
 literal     ->  %float  {% id %}
             |   %hex    {% id %}
