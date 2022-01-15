@@ -5,9 +5,13 @@ import { openSync, readFileSync, writeFileSync, closeSync } from 'fs';
 export const stdlib = (): SymbolTable => {
     const table = new SymbolTable();
 
+    table.set('null', new NullValue());
+    table.set('false', new BoolValue(false));
+    table.set('true', new BoolValue(true));
+
     table.set('print', new Print());
 
-    table.set('file', new ObjectValue({
+    table.set('BuiltinFile', new ObjectValue({
         'open': new FileOpen(),
         'read': new FileRead(),
         'write': new FileWrite(),
@@ -25,15 +29,15 @@ class Print extends BuiltinFunc {
     public execute(ctx: InterpreterContext): Value {
         const value = ctx.symbols.get('value');
         switch (value.type) {
-            case 'null':    console.log('null'); break;
-            case 'int':     console.log((value as IntValue).value); break;
-            case 'float':   console.log((value as FloatValue).value); break;
-            case 'bool':    console.log((value as BoolValue).value); break;
-            case 'char':    console.log((value as CharValue).value); break;
-            case 'string':  console.log((value as StringValue).value); break;
-            case 'array':   console.log('array'); break;
-            case 'object':  console.log('object'); break;
-            case 'func':    console.log('func'); break;
+            case 'null':    process.stdout.write('null'); break;
+            case 'int':     process.stdout.write((value as IntValue).value.toString()); break;
+            case 'float':   process.stdout.write((value as FloatValue).value.toString()); break;
+            case 'bool':    process.stdout.write((value as BoolValue).value.toString()); break;
+            case 'char':    process.stdout.write((value as CharValue).value.toString()); break;
+            case 'string':  process.stdout.write((value as StringValue).value.toString()); break;
+            case 'array':   process.stdout.write('array'); break;
+            case 'object':  process.stdout.write('object'); break;
+            case 'func':    process.stdout.write('func'); break;
         }
         return new NullValue();
     }

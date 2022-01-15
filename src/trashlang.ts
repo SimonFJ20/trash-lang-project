@@ -84,7 +84,7 @@ export namespace TL {
     export type Expressions = Expression[];
 
     export type Expression =
-        ArrayLiteral | Dot | New | FuncCall | VarAssign | VarAccess | BinaryOperation | Literal;
+        ArrayLiteral | Dot | New | FuncCall | VarAssign | BinaryOperation | Identifier | Literal;
 
     export type ArrayLiteral = {
         type: 'array',
@@ -111,14 +111,20 @@ export namespace TL {
 
     export type VarAssign = {
         type: 'varassign',
-        name: Token,
+        name: Expression,
         value: Expression,
     };
 
-    export type VarAccess = {
-        type: 'varassign',
-        name: Token,
+    export type Identifier = {
+        type: 'identifier',
+        value: Selector | Token,
     };
+
+    export type Selector = {
+        type: 'selector',
+        parent: Expression,
+        child: Token,
+    }
 
     export type BinaryOperation = {
         type: 'modulus' | 'divide' | 'multiply' | 'subtract' | 'add'
