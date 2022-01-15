@@ -16,10 +16,10 @@ const getFilename = () => {
 const main = async () => {
     const filename = getFilename();
     const ast = parse((await readFile(filename)).toString());
-    await writeFile('ast.gen.json', JSON.stringify(ast, null, 4));
-    evaluate({
-        symbols: new SymbolTable()
-    }, ast);
+    if (process.argv.includes('--ast'))
+        await writeFile('ast.gen.json', JSON.stringify(ast, null, 4));
+    if (!process.argv.includes('--no-eval'))
+        evaluate({symbols: new SymbolTable()}, ast);
 }
 
 main().catch((catched) => {

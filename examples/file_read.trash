@@ -1,10 +1,6 @@
-import "lib/std.trash"
+import "lib/std"
 
 let file := new File("README.md", "r");
 let content := file.read();
 file.close();
 println(content);
-
-file := new File("out.txt", "w");
-file.write("hellop world");
-file.close()

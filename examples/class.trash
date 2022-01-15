@@ -1,0 +1,23 @@
+import "lib/std"
+
+class MyClass {
+
+    a := null;
+
+    method1() {
+        println("from class instance");
+    }
+
+    method2() {
+        return this.a;
+    }
+
+    constructor (startV) {
+        this.a := startV
+    }
+
+}
+
+let m := new MyClass(5)
+m.method1()
+println(m.method2())
