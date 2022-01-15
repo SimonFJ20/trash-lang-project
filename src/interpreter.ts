@@ -168,7 +168,11 @@ const return_: Evaluator<TL.Return> = (ctx, {value}) => {
 const import_: Evaluator<TL.Import> = (ctx, {value}) => {
     if (!ctx.stage.is(DefStages.TOPLEVEL))
         throw new RuntimeError('imports only allowed at top level');
-    const path = value.value;
+    const path = 
+        /\.trash$/.test(value.value)
+        || value.value === 'builtins'
+        ? value.value
+        : value.value + '.trash';
     if (path in ctx.imports)
         return new NullValue();
     else
