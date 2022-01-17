@@ -13,3 +13,7 @@ Options:
     --no-eval   Dont evaluate/run the file after parsing
 ```
 
+### Ressources
+
+- [Syscalls](https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md)
+- [Memory](https://www.cs.uaf.edu/courses/cs301/2014-fall/notes/memory/)
