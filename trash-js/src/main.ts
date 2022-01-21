@@ -1,4 +1,5 @@
 import { readFile, writeFile } from "fs/promises";
+import { Compiler } from "./compiler";
 
 import { evaluate } from "./interpreter";
 import { parse } from "./parser";
@@ -18,8 +19,12 @@ const main = async () => {
     const ast = parse((await readFile(filename)).toString());
     if (process.argv.includes('--ast'))
         await writeFile('ast.gen.json', JSON.stringify(ast, null, 4));
-    if (!process.argv.includes('--no-eval'))
+    if (process.argv.includes('--run'))
         evaluate({symbols: new SymbolTable()}, ast);
+    if (process.argv.includes('--bin'))
+        new Compiler().compile(ast);
+    if (!process.argv.some(arg => arg === '--run' || arg === '--bin'))
+        console.log(`Remember to use '--run' and/or '--bin'`);
 }
 
 main().catch((catched) => {
