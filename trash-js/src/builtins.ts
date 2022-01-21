@@ -9,7 +9,9 @@ export const stdlib = (): SymbolTable => {
     table.set('false', new BoolValue(false));
     table.set('true', new BoolValue(true));
 
+    // table.set('typeof', new TypeOf());
     table.set('print', new Print());
+    // table.set('exit', new Exit());
 
     table.set('BuiltinFile', new ObjectValue({
         'open': new FileOpen(),
@@ -21,6 +23,17 @@ export const stdlib = (): SymbolTable => {
     return table;
 }
 
+class TypeOf extends BuiltinFunc {
+    constructor () {
+        super(['value']);
+    }
+
+    public execute(ctx: InterpreterContext): Value {
+        const value = ctx.symbols.get('value');
+        return new StringValue(value.type);
+    }
+}
+
 class Print extends BuiltinFunc {
     constructor () {
         super(['value']);
@@ -28,18 +41,23 @@ class Print extends BuiltinFunc {
 
     public execute(ctx: InterpreterContext): Value {
         const value = ctx.symbols.get('value');
-        switch (value.type) {
-            case 'null':    process.stdout.write('null'); break;
-            case 'int':     process.stdout.write((value as IntValue).value.toString()); break;
-            case 'float':   process.stdout.write((value as FloatValue).value.toString()); break;
-            case 'bool':    process.stdout.write((value as BoolValue).value.toString()); break;
-            case 'char':    process.stdout.write((value as CharValue).value.toString()); break;
-            case 'string':  process.stdout.write((value as StringValue).value.toString()); break;
-            case 'array':   process.stdout.write('array'); break;
-            case 'object':  process.stdout.write('object'); break;
-            case 'func':    process.stdout.write('func'); break;
-        }
+        printValue(value);
         return new NullValue();
+    }
+}
+
+class Exit extends BuiltinFunc {
+    constructor () {
+        super(['code', 'msg']);
+    }
+
+    public execute(ctx: InterpreterContext): Value {
+        const code = ctx.symbols.get('code');
+        const msg = ctx.symbols.get('msg');
+        if (code.type !== 'int')
+            throw new Error('1st arg in \'exit\' must be of type int');
+        printValue(msg);
+        process.exit((code as IntValue).value);
     }
 }
 
@@ -96,5 +114,19 @@ class FileClose extends BuiltinFunc {
             throw new RuntimeError('file must be an int');
         closeSync(file.value);
         return new NullValue();
+    }
+}
+
+const printValue = (value: Value) => {
+    switch (value.type) {
+        case 'null':    process.stdout.write('null'); break;
+        case 'int':     process.stdout.write((value as IntValue).value.toString()); break;
+        case 'float':   process.stdout.write((value as FloatValue).value.toString()); break;
+        case 'bool':    process.stdout.write((value as BoolValue).value.toString()); break;
+        case 'char':    process.stdout.write((value as CharValue).value.toString()); break;
+        case 'string':  process.stdout.write((value as StringValue).value.toString()); break;
+        case 'array':   process.stdout.write('array'); break;
+        case 'object':  process.stdout.write('object'); break;
+        case 'func':    process.stdout.write('func'); break;
     }
 }

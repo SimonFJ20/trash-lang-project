@@ -27,13 +27,13 @@ const lexer = compile({
 
     assign:     ':=',
 
-    not:        '!',
     cmp_e:      '==',
     cmp_ne:     '!=',
-    cmp_lt:     '<',
-    cmp_gt:     '<',
     cmp_lte:    '<=',
-    cmp_gte:    '<=',
+    //cmp_gte:    '>=',
+    cmp_lt:     '<',
+    //cmp_gt:     '>',
+    not:        '!',
     
     plus:       '+',
     minus:      '-',
@@ -67,7 +67,11 @@ statement   ->  block       {% id %}
             |   expression  {% id %}
 
 classdef    ->  "class" __ %name _ "{" properties "}"
-    {% (v) => ({type: 'classdef', name: v[2], properties: v[5]}) %}
+    # {% (v) => ({type: 'classdef', name: v[2], properties: v[5]}) %}
+    {% (v) => {
+        console.log(`found class '${v[2]}'`)
+        return {type: 'classdef', name: v[2], properties: v[5]}
+    } %}
 
 properties  ->  (_ property (sl_ %nl _ property):*):? _
     {% (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
@@ -76,7 +80,11 @@ property    ->  methoddef   {% id %}
             |   fielddef    {% id %}
 
 methoddef   ->  ("static" __):? %name _ "(" argdeflist ")" __ statement
-    {% (v) => ({type: 'methoddef', name: v[1], args: v[4], body: v[7], static: v[0] !== null}) %}
+    # {% (v) => ({type: 'methoddef', name: v[1], args: v[4], body: v[7], static: v[0] !== null}) %}
+    {% (v) => {
+        console.log(`found method '${v[0] !== null ? "static " : ""}${v[1]}'`)
+        return {type: 'methoddef', name: v[1], args: v[4], body: v[7], static: v[0] !== null}
+    } %}
 
 fielddef    ->  ("static" __):? %name _ ":=" _ expression
     {% (v) => ({type: 'fielddef', name: v[1], value: v[5], static: v[0] !== null}) %}

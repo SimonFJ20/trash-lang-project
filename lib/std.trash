@@ -5,6 +5,23 @@ func println(value) {
     print('\n')
 }
 
+class Whatever {
+    dslkfja := null
+
+    constructor () {
+        this.dfasdf := ""
+    }
+    
+    static from(value) {
+        if (typeof(value) != "string") {
+            exit(1, "type mismatch")
+        }
+        let s := new String()
+        s.value := value
+    }
+
+}
+
 class File {
     file := null
 

@@ -12,7 +12,7 @@ export abstract class Value {
     public abstract clone(): Value;
 
     public asBool(): BoolValue { throw new RuntimeError('illegal operation'); }
-    public doWith(op: OperationType, type: ValueType, value: NullValue): Value { throw new RuntimeError('illegal operation'); }
+    public doWith(op: OperationType, type: ValueType, value: Value): Value { throw new RuntimeError('illegal operation'); }
 }
 export class SymbolTable {
     private symbols: {[key: string]: Value} = {};
@@ -70,6 +70,23 @@ export class IntValue extends Value {
     public clone(): IntValue {
         return new IntValue(this.value);
     }
+
+    public doWith(op: OperationType, type: ValueType, value: Value): Value {
+        switch (type) {
+            case 'int': switch (op) {
+                case '+': return new IntValue(this.value + (value as IntValue).value);
+                case '-': return new IntValue(this.value - (value as IntValue).value);
+                case '*': return new IntValue(this.value * (value as IntValue).value);
+                case '/': return new IntValue(this.value / (value as IntValue).value);
+                case '%': return new IntValue(this.value % (value as IntValue).value);
+                case '==': return new BoolValue(this.value === (value as IntValue).value);
+                case '!=': return new BoolValue(this.value !== (value as IntValue).value);
+                case '<': return new BoolValue(this.value < (value as IntValue).value);
+                case '<=': return new BoolValue(this.value <= (value as IntValue).value);
+            }
+            default: return super.doWith(op, type, value);
+        }
+    }
 }
 
 export class FloatValue extends Value {
@@ -109,6 +126,16 @@ export class StringValue extends Value {
 
     public clone(): StringValue {
         return new StringValue(this.value);
+    }
+
+    public doWith(op: OperationType, type: ValueType, value: Value): Value {
+        switch (type) {
+            case 'string': switch (op) {
+                case '==': return new BoolValue(this.value === (value as StringValue).value);
+                case '!=': return new BoolValue(this.value !== (value as StringValue).value);
+            }
+            default: return super.doWith(op, type, value);
+        }
     }
 }
 

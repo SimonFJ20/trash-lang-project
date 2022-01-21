@@ -3,6 +3,7 @@ import { Compiler } from "./compiler";
 
 import { evaluate } from "./interpreter";
 import { parse } from "./parser";
+import { TL } from "./trashlang";
 import { SymbolTable } from "./value";
 
 const getFilename = () => {

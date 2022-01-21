@@ -183,7 +183,7 @@ const import_: Evaluator<TL.Import> = (ctx, {value}) => {
         const nctx = {
             ...ctx,
             symbols: new SymbolTable()
-        }; 
+        };
         evaluate(nctx, parse(readFileSync(path).toString()))
         ctx.symbols.import(nctx.symbols);
     }
@@ -315,17 +315,17 @@ const varaccess: Evaluator<TL.Identifier> = (ctx, id) => {
 
 const convertTypeToOperationType = (type: string): OperationType => {
     switch (type) {
-        case 'modulus':     return '==';
-        case 'divide':      return '!=';
-        case 'multiply':    return '<';
-        case 'subtract':    return '<';
-        case 'add':         return '<=';
-        case 'equal':       return '<=';
-        case 'inequal':     return '+';
-        case 'lt':          return '-';
-        case 'gt':          return '*';
-        case 'lte':         return '/';
-        case 'gte':         return '%';
+        case 'modulus':     return '%';
+        case 'divide':      return '/';
+        case 'multiply':    return '*';
+        case 'subtract':    return '-';
+        case 'add':         return '+';
+        case 'equal':       return '==';
+        case 'inequal':     return '!=';
+        case 'lt':          return '<';
+        // case 'gt':          return '>';
+        case 'lte':         return '<=';
+        // case 'gte':         return '>=';
     }
     throw new RuntimeError('how tf this get reached');
 }
@@ -334,8 +334,7 @@ const binaryoperation: Evaluator<TL.BinaryOperation> = (ctx, {type, left, right}
     const r = expression(ctx, right);
     const l = expression(ctx, left);
     const op = convertTypeToOperationType(type)
-    l.doWith(op, r.type, r);
-    return l;
+    return l.doWith(op, r.type, r);
 }
 
 type IdentifierRes = {

@@ -1,0 +1,156 @@
+Statistical profiling result from isolate-0x562b37a60cd0-21328-v8.log, (11504 ticks, 0 unaccounted, 0 excluded).
+
+ [Shared libraries]:
+   ticks  total  nonlib   name
+  10239   89.0%          /usr/bin/node
+
+ [JavaScript]:
+   ticks  total  nonlib   name
+    280    2.4%   22.1%  LazyCompile: *Column.process /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:83:40
+      3    0.0%    0.2%  LazyCompile: *Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+      2    0.0%    0.2%  LazyCompile: *postprocess /home/simon/Workspace/trash-lang/trash-js/dist/grammar.js:79:87
+      1    0.0%    0.1%  RegExp: \/[*/]#\s+sourceMappingURL=(?<sourceMappingURL>[^\s]+)
+      1    0.0%    0.1%  LazyCompile: *State /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:29:19
+      1    0.0%    0.1%  Function: ^Column.predict /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:136:40
+
+ [C++]:
+   ticks  total  nonlib   name
+    515    4.5%   40.7%  __futex_abstimed_wait_common64
+    108    0.9%    8.5%  __memcpy_avx_unaligned_erms
+     53    0.5%    4.2%  _int_malloc
+     43    0.4%    3.4%  _int_free
+     37    0.3%    2.9%  node::native_module::NativeModuleEnv::CompileFunction(v8::FunctionCallbackInfo<v8::Value> const&)
+     28    0.2%    2.2%  __GI___libc_write
+     20    0.2%    1.6%  __pthread_mutex_unlock_usercnt
+     17    0.1%    1.3%  fwrite
+     16    0.1%    1.3%  __GI___mmap
+     16    0.1%    1.3%  __GI___libc_malloc
+     15    0.1%    1.2%  __GI___pthread_mutex_lock
+     15    0.1%    1.2%  __GI___munmap
+     12    0.1%    0.9%  __GI___mprotect
+     11    0.1%    0.9%  node::contextify::ContextifyContext::CompileFunction(v8::FunctionCallbackInfo<v8::Value> const&)
+      9    0.1%    0.7%  __lll_lock_wait_private
+      8    0.1%    0.6%  __pthread_cond_signal
+      5    0.0%    0.4%  unlink_chunk.constprop.0
+      5    0.0%    0.4%  _dl_addr
+      5    0.0%    0.4%  __lll_lock_wait
+      4    0.0%    0.3%  std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long)
+      4    0.0%    0.3%  cfree@GLIBC_2.2.5
+      4    0.0%    0.3%  __getrusage
+      3    0.0%    0.2%  std::ostream::sentry::sentry(std::ostream&)
+      3    0.0%    0.2%  __brk
+      3    0.0%    0.2%  __GI__IO_file_xsputn
+      2    0.0%    0.2%  __GI___printf_fp_l
+      1    0.0%    0.1%  sysmalloc
+      1    0.0%    0.1%  std::ostream& std::ostream::_M_insert<long>(long)
+      1    0.0%    0.1%  std::__detail::_Prime_rehash_policy::_M_next_bkt(unsigned long) const
+      1    0.0%    0.1%  operator new[](unsigned long)
+      1    0.0%    0.1%  operator new(unsigned long)
+      1    0.0%    0.1%  operator delete(void*)
+      1    0.0%    0.1%  node::inspector::protocol::WorkerAgent::~WorkerAgent()
+      1    0.0%    0.1%  node::inspector::InspectorSocketServer::HandleGetRequest(int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)
+      1    0.0%    0.1%  node::binding::GetInternalBinding(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.1%  __pthread_rwlock_init
+      1    0.0%    0.1%  __pthread_cond_wait
+      1    0.0%    0.1%  __memset_avx2_unaligned_erms
+      1    0.0%    0.1%  __memset_avx2_erms
+      1    0.0%    0.1%  __GI___pthread_rwlock_wrlock
+      1    0.0%    0.1%  __GI___pthread_rwlock_unlock
+      1    0.0%    0.1%  __GI__IO_setb
+
+ [Summary]:
+   ticks  total  nonlib   name
+    288    2.5%   22.8%  JavaScript
+    977    8.5%   77.2%  C++
+  10534   91.6%  832.7%  GC
+  10239   89.0%          Shared libraries
+
+ [C++ entry points]:
+   ticks    cpp   total   name
+     51   41.5%    0.4%  node::inspector::InspectorSocketServer::SendListResponse(node::inspector::InspectorSocket*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, node::inspector::SocketSession*)
+     27   22.0%    0.2%  __memcpy_avx_unaligned_erms
+     11    8.9%    0.1%  fwrite
+      8    6.5%    0.1%  __GI___libc_write
+      7    5.7%    0.1%  node::inspector::MainThreadHandle::Connect(std::unique_ptr<node::inspector::InspectorSessionDelegate, std::default_delete<node::inspector::InspectorSessionDelegate> >, bool)
+      4    3.3%    0.0%  std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long)
+      2    1.6%    0.0%  std::ostream::sentry::sentry(std::ostream&)
+      2    1.6%    0.0%  _int_free
+      1    0.8%    0.0%  unlink_chunk.constprop.0
+      1    0.8%    0.0%  std::ostream& std::ostream::_M_insert<long>(long)
+      1    0.8%    0.0%  non-virtual thunk to node::crypto::KeyGenJob<node::crypto::KeyPairGenTraits<node::crypto::DsaKeyGenTraits> >::~KeyGenJob()
+      1    0.8%    0.0%  node::inspector::protocol::WorkerAgent::~WorkerAgent()
+      1    0.8%    0.0%  __memset_avx2_unaligned_erms
+      1    0.8%    0.0%  __GI___pthread_rwlock_wrlock
+      1    0.8%    0.0%  __GI___pthread_rwlock_unlock
+      1    0.8%    0.0%  __GI___mprotect
+      1    0.8%    0.0%  __GI___libc_malloc
+      1    0.8%    0.0%  __GI__IO_setb
+      1    0.8%    0.0%  __GI__IO_file_xsputn
+
+ [Bottom up (heavy) profile]:
+  Note: percentage shows a share of a particular caller in the total
+  amount of its parent calls.
+  Callers occupying less than 1.0% are not shown.
+
+   ticks parent  name
+  10239   89.0%  /usr/bin/node
+    340    3.3%    LazyCompile: *Column.process /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:83:40
+    329   96.8%      LazyCompile: *Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+    329  100.0%        LazyCompile: ~parse /home/simon/Workspace/trash-lang/trash-js/dist/parser.js:9:15
+    329  100.0%          LazyCompile: ~import_ /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:167:17
+    329  100.0%            LazyCompile: ~statement /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:62:19
+     11    3.2%      Function: ^Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+     11  100.0%        LazyCompile: ~parse /home/simon/Workspace/trash-lang/trash-js/dist/parser.js:9:15
+     11  100.0%          LazyCompile: ~import_ /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:167:17
+     11  100.0%            LazyCompile: ~statement /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:62:19
+    132    1.3%    /usr/bin/node
+     92   69.7%      LazyCompile: *Column.process /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:83:40
+     90   97.8%        LazyCompile: *Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+     90  100.0%          LazyCompile: ~parse /home/simon/Workspace/trash-lang/trash-js/dist/parser.js:9:15
+     90  100.0%            LazyCompile: ~import_ /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:167:17
+      2    2.2%        Function: ^Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+      2  100.0%          LazyCompile: ~parse /home/simon/Workspace/trash-lang/trash-js/dist/parser.js:9:15
+      2  100.0%            LazyCompile: ~import_ /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:167:17
+     15   11.4%      Function: ^Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+     15  100.0%        LazyCompile: ~parse /home/simon/Workspace/trash-lang/trash-js/dist/parser.js:9:15
+     13   86.7%          LazyCompile: ~import_ /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:167:17
+     13  100.0%            LazyCompile: ~statement /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:62:19
+      2   13.3%          LazyCompile: ~main /home/simon/Workspace/trash-lang/trash-js/dist/main.js:16:14
+      2  100.0%            /usr/bin/node
+     11    8.3%      /usr/bin/node
+      7   63.6%        LazyCompile: *Column.process /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:83:40
+      7  100.0%          LazyCompile: *Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+      7  100.0%            LazyCompile: ~parse /home/simon/Workspace/trash-lang/trash-js/dist/parser.js:9:15
+      1    9.1%        LazyCompile: ~eat /home/simon/Workspace/trash-lang/trash-js/node_modules/moo/moo.js:425:33
+      1  100.0%          LazyCompile: ~Lexer.next /home/simon/Workspace/trash-lang/trash-js/node_modules/moo/moo.js:450:34
+      1  100.0%            LazyCompile: ~Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+      1    9.1%        LazyCompile: ~deprecate node:internal/util:96:19
+      1  100.0%          Function: ~<anonymous> node:internal/modules/cjs/loader:1:1
+      1  100.0%            LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    9.1%        LazyCompile: ~compileRules /home/simon/Workspace/trash-lang/trash-js/node_modules/moo/moo.js:152:24
+      1  100.0%          LazyCompile: ~compile /home/simon/Workspace/trash-lang/trash-js/node_modules/moo/moo.js:264:19
+      1  100.0%            Function: ~<anonymous> /home/simon/Workspace/trash-lang/trash-js/dist/grammar.js:1:1
+      1    9.1%        Function: ^reGroups /home/simon/Workspace/trash-lang/trash-js/node_modules/moo/moo.js:24:20
+      1  100.0%          Function: ^compileRules /home/simon/Workspace/trash-lang/trash-js/node_modules/moo/moo.js:152:24
+      1  100.0%            LazyCompile: ~compile /home/simon/Workspace/trash-lang/trash-js/node_modules/moo/moo.js:264:19
+      2    1.5%      LazyCompile: ~realpathSync node:fs:2410:22
+      2  100.0%        LazyCompile: ~toRealPath node:internal/modules/cjs/loader:393:20
+      2  100.0%          LazyCompile: ~tryFile node:internal/modules/cjs/loader:384:17
+      2  100.0%            LazyCompile: ~tryPackage node:internal/modules/cjs/loader:338:20
+      2    1.5%      LazyCompile: ~prepareMainThreadExecution node:internal/bootstrap/pre_execution:22:36
+      2  100.0%        Function: ~<anonymous> node:internal/main/run_main_module:1:1
+
+    515    4.5%  __futex_abstimed_wait_common64
+
+    280    2.4%  LazyCompile: *Column.process /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:83:40
+    271   96.8%    LazyCompile: *Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+    271  100.0%      LazyCompile: ~parse /home/simon/Workspace/trash-lang/trash-js/dist/parser.js:9:15
+    271  100.0%        LazyCompile: ~import_ /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:167:17
+    271  100.0%          LazyCompile: ~statement /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:62:19
+    271  100.0%            LazyCompile: ~statements /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:54:20
+      9    3.2%    Function: ^Parser.feed /home/simon/Workspace/trash-lang/trash-js/node_modules/nearley/lib/nearley.js:279:37
+      9  100.0%      LazyCompile: ~parse /home/simon/Workspace/trash-lang/trash-js/dist/parser.js:9:15
+      9  100.0%        LazyCompile: ~import_ /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:167:17
+      9  100.0%          LazyCompile: ~statement /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:62:19
+      9  100.0%            LazyCompile: ~statements /home/simon/Workspace/trash-lang/trash-js/dist/interpreter.js:54:20
+

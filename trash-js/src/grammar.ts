@@ -40,13 +40,13 @@ const lexer = compile({
 
     assign:     ':=',
 
-    not:        '!',
     cmp_e:      '==',
     cmp_ne:     '!=',
-    cmp_lt:     '<',
-    cmp_gt:     '<',
     cmp_lte:    '<=',
-    cmp_gte:    '<=',
+    //cmp_gte:    '>=',
+    cmp_lt:     '<',
+    //cmp_gt:     '>',
+    not:        '!',
     
     plus:       '+',
     minus:      '-',
@@ -98,7 +98,6 @@ const grammar: Grammar = {
     {"name": "statements$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "statements", "symbols": ["statements$ebnf$1", "_"], "postprocess": (v) => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : []},
     {"name": "statement", "symbols": ["block"], "postprocess": id},
-    {"name": "statement", "symbols": ["classdef"], "postprocess": id},
     {"name": "statement", "symbols": ["funcdef"], "postprocess": id},
     {"name": "statement", "symbols": ["ifelse"], "postprocess": id},
     {"name": "statement", "symbols": ["if"], "postprocess": id},
@@ -106,8 +105,12 @@ const grammar: Grammar = {
     {"name": "statement", "symbols": ["vardef"], "postprocess": id},
     {"name": "statement", "symbols": ["return"], "postprocess": id},
     {"name": "statement", "symbols": ["import"], "postprocess": id},
+    {"name": "statement", "symbols": ["classdef"], "postprocess": id},
     {"name": "statement", "symbols": ["expression"], "postprocess": id},
-    {"name": "classdef", "symbols": [{"literal":"class"}, "__", (lexer.has("name") ? {type: "name"} : name), "_", {"literal":"{"}, "properties", {"literal":"}"}], "postprocess": (v) => ({type: 'classdef', name: v[2], properties: v[5]})},
+    {"name": "classdef", "symbols": [{"literal":"class"}, "__", (lexer.has("name") ? {type: "name"} : name), "_", {"literal":"{"}, "properties", {"literal":"}"}], "postprocess":  (v) => {
+            console.log(`found class '${v[2]}'`)
+            return {type: 'classdef', name: v[2], properties: v[5]}
+        } },
     {"name": "properties$ebnf$1$subexpression$1$ebnf$1", "symbols": []},
     {"name": "properties$ebnf$1$subexpression$1$ebnf$1$subexpression$1", "symbols": ["sl_", (lexer.has("nl") ? {type: "nl"} : nl), "_", "property"]},
     {"name": "properties$ebnf$1$subexpression$1$ebnf$1", "symbols": ["properties$ebnf$1$subexpression$1$ebnf$1", "properties$ebnf$1$subexpression$1$ebnf$1$subexpression$1"], "postprocess": (d) => d[0].concat([d[1]])},
@@ -120,7 +123,10 @@ const grammar: Grammar = {
     {"name": "methoddef$ebnf$1$subexpression$1", "symbols": [{"literal":"static"}, "__"]},
     {"name": "methoddef$ebnf$1", "symbols": ["methoddef$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "methoddef$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "methoddef", "symbols": ["methoddef$ebnf$1", (lexer.has("name") ? {type: "name"} : name), "_", {"literal":"("}, "argdeflist", {"literal":")"}, "__", "statement"], "postprocess": (v) => ({type: 'methoddef', name: v[1], args: v[4], body: v[7], static: v[0] !== null})},
+    {"name": "methoddef", "symbols": ["methoddef$ebnf$1", (lexer.has("name") ? {type: "name"} : name), "_", {"literal":"("}, "argdeflist", {"literal":")"}, "__", "statement"], "postprocess":  (v) => {
+            console.log(`found method '${v[0] !== null ? "static " : ""}${v[1]}'`)
+            return {type: 'methoddef', name: v[1], args: v[4], body: v[7], static: v[0] !== null}
+        } },
     {"name": "fielddef$ebnf$1$subexpression$1", "symbols": [{"literal":"static"}, "__"]},
     {"name": "fielddef$ebnf$1", "symbols": ["fielddef$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "fielddef$ebnf$1", "symbols": [], "postprocess": () => null},
